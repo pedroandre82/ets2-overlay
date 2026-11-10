@@ -2,10 +2,14 @@ import React from 'react';
 import { GadgetComponent } from '@/types/gadget';
 import { SystemStatus } from './core/SystemStatus';
 import { SpeedAlert } from './core/SpeedAlert';
+import { CruiseControl } from './core/CruiseControl';
+import { Compass } from './core/Compass';
 
 export const GADGET_REGISTRY: Record<string, GadgetComponent> = {
   'core:system-status': SystemStatus,
   'core:speed-alert': SpeedAlert,
+  'core:cruise-control': CruiseControl,
+  'core:compass': Compass,
 };
 
 interface PlaceholderProps {
