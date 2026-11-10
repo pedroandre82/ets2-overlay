@@ -71,7 +71,7 @@ src/
 
 1. **Clone o repositorio:**
    ```bash
-   git clone <URL_DO_SEU_REPOSITORIO>
+   git clone https://github.com/pedroandre82/ets2-overlay
    cd ets2-overlay
    ```
 
