@@ -1,8 +1,5 @@
 const { WebSocketServer } = require('ws');
-const trucksimTelemetryModule = require('trucksim-telemetry');
-
-const truckSimTelemetry =
-  trucksimTelemetryModule.truckSimTelemetry || trucksimTelemetryModule;
+const { truckSimTelemetry } = require('trucksim-telemetry');
 
 const PORT = 8080;
 const wss = new WebSocketServer({ port: PORT });
@@ -10,46 +7,46 @@ const wss = new WebSocketServer({ port: PORT });
 console.log(`[ETS2 Telemetry Server] Servidor WebSocket iniciado na porta ${PORT}`);
 
 const telemetry = truckSimTelemetry();
-let hasLoggedData = false;
-
-const broadcast = (data) => {
-  if (!data) return;
-
-  if (!hasLoggedData) {
-    console.log('[ETS2 Telemetry Server] 🟢 DADOS DO JOGO RECEBIDOS COM SUCESSO!');
-    hasLoggedData = true;
-  }
-
-  if (wss.clients.size === 0) return;
-  const payload = JSON.stringify(data);
-
-  wss.clients.forEach((client) => {
-    if (client.readyState === 1) {
-      client.send(payload);
-    }
-  });
-};
 
 telemetry.on('connected', () => {
-  console.log('[ETS2 Telemetry Server] 🟢 SDK do ETS2 Conectado!');
+  console.log('[ETS2 Telemetry Server] 🟢 SDK do ETS2 Conectado com sucesso!');
 });
 
-// Escuta os eventos de telemetria
-telemetry.on('data', broadcast);
-telemetry.on('telemetry', broadcast);
+// Converte valores BigInt em Number para permitir o JSON.stringify sem erro
+const safeStringify = (obj) =>
+  JSON.stringify(obj, (key, value) =>
+    typeof value === 'bigint' ? Number(value) : value
+  );
 
-// Fallback por leitura direta da memória
+// Transmite a telemetria a cada 50ms (20 FPS) aos clientes conectados
 setInterval(() => {
+  if (wss.clients.size === 0) return;
+
+  const currentData = telemetry.data;
+  if (!currentData) return;
+
   try {
-    if (typeof telemetry.getData === 'function') {
-      const data = telemetry.getData();
-      if (data) broadcast(data);
-    }
+    const payload = safeStringify(currentData);
+
+    wss.clients.forEach((client) => {
+      if (client.readyState === 1) { // 1 = OPEN
+        client.send(payload);
+      }
+    });
   } catch (err) {
-    // Jogo fechado ou pausado
+    console.error('[ETS2 Telemetry Server] Erro na serialização:', err.message);
   }
-}, 100);
+}, 50);
 
 wss.on('connection', (ws) => {
   console.log('[ETS2 Telemetry Server] 🟢 Overlay (Next.js) conectado!');
+
+  // Envia a foto atualizada do jogo assim que o cliente reconecta
+  if (telemetry.data) {
+    try {
+      ws.send(safeStringify(telemetry.data));
+    } catch (err) {
+      console.error('[ETS2 Telemetry Server] Erro no payload inicial:', err.message);
+    }
+  }
 });

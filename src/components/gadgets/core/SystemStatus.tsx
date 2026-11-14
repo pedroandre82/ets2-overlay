@@ -10,12 +10,12 @@ interface SystemStatusData {
 }
 
 export const SystemStatus: React.FC<GadgetProps> = ({ isDemoMode = false, data }) => {
-    const demoData: SystemStatusData = {
-        serverConnected: false,
-        gameConnected: true,
-        gamePaused: false,
-    };
-
+  const demoData: SystemStatusData = {
+    serverConnected: false,
+    gameConnected: true,
+    gamePaused: false,
+  };
+  
     const telemetryData = data as SystemStatusData | undefined;
 
     const status: SystemStatusData = isDemoMode || !telemetryData

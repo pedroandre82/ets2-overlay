@@ -1,15 +1,27 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect } from 'react';
 import { LayoutConfig } from '@/types/layout';
 import { SlotContainer } from '@/components/layout/SlotContainer';
+import { useTelemetry } from '@/contexts/TelemetryContext';
 
 interface OverlayEngineProps {
   layout: LayoutConfig;
 }
 
 export const OverlayEngine: React.FC<OverlayEngineProps> = ({ layout }) => {
-  const [isDemoMode] = useState<boolean>(true);
+  const { isDemoMode } = useTelemetry();
+
+    // Teste rápido de dados recebidos e traduzidos
+  // const { rawData, data} = useTelemetry();
+  // useEffect(() => {
+  //   if (rawData) {
+  //     console.log('📦 JSON BRUTO DO SERVIDOR:', rawData);
+  //   }
+  //   if (data) {
+  //     console.log('🔄 DADOS TRADUZIDOS PELO ADAPTER:', data);
+  //   }
+  // }, [rawData, data]);
 
   return (
     <div
@@ -32,12 +44,13 @@ export const OverlayEngine: React.FC<OverlayEngineProps> = ({ layout }) => {
       >
         <span className="text-emerald-500/30 text-xs font-mono tracking-widest uppercase">
           Área Transparente - Jogo ({layout.gameViewport.width}x{layout.gameViewport.height})
+          {isDemoMode && ' (MODO DEMO ATIVADO)'}
         </span>
       </div>
 
       {/* Slots posicionados dinamicamente via Layout Config */}
       {layout.slots.map((slot) => (
-        <SlotContainer key={slot.id} slot={slot} isDemoMode={isDemoMode} />
+        <SlotContainer key={slot.id} slot={slot} />
       ))}
     </div>
   );

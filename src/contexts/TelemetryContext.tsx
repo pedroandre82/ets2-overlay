@@ -5,21 +5,30 @@ import { adaptTelemetryData, NormalizedTelemetryData } from '@/adapters/telemetr
 
 interface TelemetryContextType {
   data: NormalizedTelemetryData | null;
+  rawData: any | null;
   isConnected: boolean;
   isDemoMode: boolean;
 }
 
 const TelemetryContext = createContext<TelemetryContextType>({
   data: null,
+  rawData: null,
   isConnected: false,
   isDemoMode: true,
 });
 
 export const TelemetryProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [data, setData] = useState<NormalizedTelemetryData | null>(null);
+  const [rawData, setRawData] = useState<any | null>(null);
   const [isConnected, setIsConnected] = useState<boolean>(false);
 
+  // Ler a variável de ambiente NEXT_PUBLIC_DEMO_MODE para habilitar o modo demo
+  const envDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
+
   useEffect(() => {
+    // Se o Modo Demo forçado por env estiver ativo, nem abre conexão WebSocket
+    if (envDemoMode) return;
+
     let ws: WebSocket | null = null;
     let reconnectTimeout: NodeJS.Timeout | null = null;
 
@@ -34,10 +43,11 @@ export const TelemetryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
         ws.onmessage = (event) => {
           try {
-            const rawData = JSON.parse(event.data);
-            console.log('[TelemetryClient] Payload recebido:', rawData); // <--- LOG DE DEBUG
+            const raw = JSON.parse(event.data);
+            setRawData(raw);
+
             // TRADUÇÃO ÚNICA AQUI:
-            const normalizedData = adaptTelemetryData(rawData);
+            const normalizedData = adaptTelemetryData(raw);
             setData(normalizedData);
           } catch (err) {
             console.error('[TelemetryClient] Erro ao decodificar JSON:', err);
@@ -61,14 +71,19 @@ export const TelemetryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
     return () => {
       if (reconnectTimeout) clearTimeout(reconnectTimeout);
-      if (ws) ws.close();
+      if (ws) {
+        console.log('[TelemetryClient] Desconectado do servidor de telemetria!');
+        ws.onerror = null;
+        ws.onclose = null;
+        ws.close();
+      }
     };
-  }, []);
+  }, [envDemoMode]);
 
-  const isDemoMode = !isConnected || !data;
+  const isDemoMode = envDemoMode;
 
   return (
-    <TelemetryContext.Provider value={{ data, isConnected, isDemoMode }}>
+    <TelemetryContext.Provider value={{ data, rawData, isConnected, isDemoMode }}>
       {children}
     </TelemetryContext.Provider>
   );

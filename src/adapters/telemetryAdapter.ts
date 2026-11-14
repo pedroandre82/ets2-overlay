@@ -5,11 +5,8 @@
  */
 
 export interface NormalizedTelemetryData {
-  // Navigation Info (Route Advisor)
   navigationDistance: number;
   navigationTime: number;
-
-  // Job Summary
   cargoName: string;
   cargoMass: number;
   citySource: string;
@@ -19,66 +16,61 @@ export interface NormalizedTelemetryData {
   specialJob: boolean;
   market: string;
   remainingDeliveryTime: number;
-
-  // Next Rest Stop
   nextRestStop: number;
-
-  // Trailer Info
   attached: boolean;
   brand: string;
   name: string;
   bodyType: string;
   chainType: string;
-
-  // Configurações Globais do Simulador
   gameScale: number;
 }
 
-export function adaptTelemetryData(raw: any): NormalizedTelemetryData | null {
-  if (!raw) return null;
+export const adaptTelemetryData = (raw: any): NormalizedTelemetryData => {
+  if (!raw) {
+    return {
+      navigationDistance: 0,
+      navigationTime: 0,
+      cargoName: '',
+      cargoMass: 0,
+      citySource: '',
+      companySource: '',
+      cityDestination: '',
+      companyDestination: '',
+      specialJob: false,
+      market: '',
+      remainingDeliveryTime: 0,
+      nextRestStop: 0,
+      attached: false,
+      brand: '',
+      name: '',
+      bodyType: '',
+      chainType: '',
+      gameScale: 19,
+    };
+  }
 
-  // Extração segura dos objetos do payload
-  const job = raw.job || {};
-  const cargo = job.cargo || {};
-  const citySource = job.citySource || {};
-  const companySource = job.companySource || {};
-  const cityDestination = job.cityDestination || {};
-  const companyDestination = job.companyDestination || {};
-  const market = job.market || {};
-  const game = raw.game || {};
-  const nav = raw.navigation || {};
-
-  // Trata suporte a trailer único ou múltiplos reboques (trailers)
-  const trailer = raw.trailer || (Array.isArray(raw.trailers) ? raw.trailers : {}) || {};
-  const trailerBrand = trailer.brand || {};
+  // Extrai do nó `current` ou da raiz
+  const src = raw.current || raw;
+  const firstTrailer = Array.isArray(src.trailers) && src.trailers.length > 0 ? src.trailers : null;
 
   return {
-    // Navigation Info
-    navigationDistance: nav.distance?.value ?? nav.distance ?? 0,
-    navigationTime: nav.time?.value ?? nav.time ?? 0,
-
-    // Job Summary
-    cargoName: cargo.name ?? cargo.id ?? '',
-    cargoMass: cargo.mass ?? 0,
-    citySource: typeof citySource === 'string' ? citySource : (citySource.name ?? citySource.id ?? ''),
-    companySource: typeof companySource === 'string' ? companySource : (companySource.name ?? companySource.id ?? ''),
-    cityDestination: typeof cityDestination === 'string' ? cityDestination : (cityDestination.name ?? cityDestination.id ?? ''),
-    companyDestination: typeof companyDestination === 'string' ? companyDestination : (companyDestination.name ?? companyDestination.id ?? ''),
-    specialJob: Boolean(job.specialJob),
-    market: typeof market === 'string' ? market : (market.id ?? market.name ?? ''),
-    remainingDeliveryTime: job.deliveryTime?.value ?? job.deliveryTime ?? job.remainingTime ?? 0,
-
-    // Next Rest Stop
-    nextRestStop: game.nextRestStop?.value ?? game.nextRestStop ?? 0,
-
-    // Trailer Info
-    attached: Boolean(trailer.attached),
-    brand: typeof trailerBrand === 'string' ? trailerBrand : (trailerBrand.name ?? trailerBrand.id ?? ''),
-    name: trailer.name ?? '',
-    bodyType: trailer.bodyType ?? '',
-    chainType: trailer.chainType ?? '',
-
-    // Global
-    gameScale: game.scale ?? 19.0,
+    navigationDistance: src.routeDistance ?? src.navigation?.navigationDistance ?? 0,
+    navigationTime: src.routeTime ?? src.navigation?.navigationTime ?? 0,
+    cargoName: src.cargo ?? src.job?.cargo?.name ?? '',
+    cargoMass: src.cargoMass ?? src.job?.cargo?.mass ?? 0,
+    citySource: src.citySrc ?? src.job?.citySource ?? '',
+    companySource: src.compSrc ?? src.job?.companySource ?? '',
+    cityDestination: src.cityDst ?? src.job?.cityDestination ?? '',
+    companyDestination: src.compDst ?? src.job?.companyDestination ?? '',
+    specialJob: Boolean(src.specialJob ?? src.job?.specialJob),
+    market: src.jobMarket ?? src.job?.market ?? '',
+    remainingDeliveryTime: src.timeAbsDelivery ?? 0,
+    nextRestStop: src.restStop ?? src.game?.nextRestStop ?? 0,
+    attached: Boolean(firstTrailer?.attached ?? src.trailer?.attached),
+    brand: src.truckBrand ?? firstTrailer?.brand ?? src.truck?.constants?.brand ?? '',
+    name: src.truckName ?? firstTrailer?.name ?? src.truck?.constants?.name ?? '',
+    bodyType: firstTrailer?.bodyType ?? src.trailer?.bodyType ?? '',
+    chainType: firstTrailer?.chainType ?? src.trailer?.chainType ?? '',
+    gameScale: src.scale ?? src.game?.scale ?? 19,
   };
-}
+};

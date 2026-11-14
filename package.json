@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "server": "node server/index.js"
+    "server": "node server/index.js",
+    "dev:all": "concurrently --names \"SERVER,OVERLAY\" -c \"cyan,magenta\" \"npm run server\" \"npm run dev\""   
   },
   "dependencies": {
     "next": "16.4.5",
@@ -22,6 +23,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/ws": "^8.18.2",
+    "concurrently": "^10.0.7",
     "eslint": "^9",
     "eslint-config-next": "^15.5.29",
     "tailwindcss": "^4",

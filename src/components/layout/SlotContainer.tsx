@@ -4,13 +4,14 @@ import React from 'react';
 import { SlotDefinition } from '@/types/layout';
 import { slotMapping } from '@/config/slotMapping.config';
 import { GADGET_REGISTRY, PlaceholderGadget } from '@/components/gadgets/registry';
+import { useTelemetry } from '@/contexts/TelemetryContext';
 
 interface SlotContainerProps {
   slot: SlotDefinition;
-  isDemoMode: boolean;
 }
 
-export const SlotContainer: React.FC<SlotContainerProps> = ({ slot, isDemoMode }) => {
+export const SlotContainer: React.FC<SlotContainerProps> = ({ slot }) => {
+  const { data, isDemoMode } = useTelemetry();
   const gadgetKey = slotMapping[slot.id];
   const GadgetComponent = gadgetKey ? GADGET_REGISTRY[gadgetKey] : null;
 
@@ -26,7 +27,7 @@ export const SlotContainer: React.FC<SlotContainerProps> = ({ slot, isDemoMode }
       className="box-border p-1"
     >
       {GadgetComponent ? (
-        <GadgetComponent isDemoMode={isDemoMode} />
+        <GadgetComponent data={data} isDemoMode={isDemoMode} />
       ) : (
         <PlaceholderGadget slotId={slot.id} width={slot.width} height={slot.height} />
       )}
