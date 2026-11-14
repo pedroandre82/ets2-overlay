@@ -4,12 +4,20 @@ import { SystemStatus } from './core/SystemStatus';
 import { SpeedAlert } from './core/SpeedAlert';
 import { CruiseControl } from './core/CruiseControl';
 import { Compass } from './core/Compass';
+import { NavigationInfo } from './core/NavigationInfo';
+import { JobSummary } from './core/JobSummary';
+import { NextRestStop } from './core/NextRestStop';
+import { TrailerInfo } from './core/TrailerInfo';
 
 export const GADGET_REGISTRY: Record<string, GadgetComponent> = {
   'core:system-status': SystemStatus,
   'core:speed-alert': SpeedAlert,
   'core:cruise-control': CruiseControl,
   'core:compass': Compass,
+  'core:navigation-info': NavigationInfo,
+  'core:job-summary': JobSummary,
+  'core:next-rest-stop': NextRestStop,
+  'core:trailer-info': TrailerInfo,
 };
 
 interface PlaceholderProps {

@@ -1,9 +1,9 @@
 export const slotMapping: Record<string, string | null> = {
-  'top-corner-left': null,
-  'top-1': null,
-  'top-2': null,
+  'top-corner-left': 'core:next-rest-stop',
+  'top-1': 'core:navigation-info',
+  'top-2': 'core:job-summary',
   'top-center': 'core:compass',
-  'top-3': null,
+  'top-3': 'core:trailer-info',
   'top-4': null,
   'top-corner-right': 'core:system-status',
   'left-1': 'core:speed-alert',
