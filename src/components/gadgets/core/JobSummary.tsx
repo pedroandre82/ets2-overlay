@@ -2,70 +2,69 @@
 
 import React from 'react';
 import { GadgetProps } from '@/types/gadget';
+import { NormalizedTelemetryData } from '@/adapters/telemetryAdapter';
 
 interface JobSummaryData {
   cargoName: string;
-  cargoMass: number; // em kg
+  cargoMassTons: number;
   citySource: string;
   companySource: string;
   cityDestination: string;
   companyDestination: string;
   specialJob: boolean;
-  market: string; // ex: 'external_contracts', 'freight_market', 'cargo_market', 'quick_job'
-  remainingDeliveryTime: number; // em segundos
-  navigationTime?: number; // em segundos (tempo estipulado no GPS)
+  jobMarket: string; // ex: 'external_contracts', 'freight_market', 'cargo_market', 'quick_job'
+  jobDeliveryTimeRemainingMin: number; // em minutos
+  routeTimeSeconds: number; // em segundos (tempo estipulado no GPS)
 }
 
 export const JobSummary: React.FC<GadgetProps> = ({ isDemoMode = false, data }) => {
   // Dados de teste no Modo Demo (Simulando frete WoTr com tempo em azul)
   const demoData: JobSummaryData = {
     cargoName: 'Medical Equipment',
-    cargoMass: 14000,
+    cargoMassTons: 14,
     citySource: 'Hamburg',
     companySource: 'LKW',
     cityDestination: 'Verona',
     companyDestination: 'Transinet',
     specialJob: false,
-    market: 'external_contracts',
-    remainingDeliveryTime: 64800, // 18 horas reais restantes no WoTr
-    navigationTime: 36000,
+    jobMarket: 'external_contracts',
+    jobDeliveryTimeRemainingMin: 1080, // 18 horas reais restantes no WoTr
+    routeTimeSeconds: 36000, // 10h no GPS
   };
 
-  const telemetryData = data as JobSummaryData | undefined;
-  const currentData: JobSummaryData = isDemoMode || !telemetryData
+  const telemetryData = data as NormalizedTelemetryData | undefined;
+
+  const currentData: JobSummaryData = isDemoMode
     ? demoData
     : {
-        cargoName: telemetryData.cargoName ?? '',
-        cargoMass: telemetryData.cargoMass ?? 0,
-        citySource: telemetryData.citySource ?? '',
-        companySource: telemetryData.companySource ?? '',
-        cityDestination: telemetryData.cityDestination ?? '',
-        companyDestination: telemetryData.companyDestination ?? '',
-        specialJob: telemetryData.specialJob ?? false,
-        market: telemetryData.market ?? '',
-        remainingDeliveryTime: telemetryData.remainingDeliveryTime ?? 0,
-        navigationTime: telemetryData.navigationTime ?? 0,
+        cargoName: telemetryData?.cargoName ?? '',
+        cargoMassTons: telemetryData?.cargoMassTons ?? 0,
+        citySource: telemetryData?.citySource ?? '',
+        companySource: telemetryData?.companySource ?? '',
+        cityDestination: telemetryData?.cityDestination ?? '',
+        companyDestination: telemetryData?.companyDestination ?? '',
+        specialJob: telemetryData?.specialJob ?? false,
+        jobMarket: telemetryData?.jobMarket ?? '',
+        jobDeliveryTimeRemainingMin: telemetryData?.jobDeliveryTimeRemainingMin ?? 0,
+        routeTimeSeconds: telemetryData?.routeTimeSeconds ?? 0,
       };
 
   const hasJob = Boolean(currentData.cargoName || currentData.cityDestination);
-  const isWoTr = currentData.market.includes('external');
-
-  // Conversão de peso em toneladas
-  const massTons = Math.round(currentData.cargoMass / 1000);
+  const isWoTr = currentData.jobMarket.includes('external');
 
   // Formatação do tempo restante (Horas e Minutos)
-  const remainingMinutes = Math.floor(currentData.remainingDeliveryTime / 60);
-  const hours = Math.floor(remainingMinutes / 60);
-  const mins = remainingMinutes % 60;
+  const totalMins = Math.max(0, currentData.jobDeliveryTimeRemainingMin);
+  const hours = Math.floor(totalMins / 60);
+  const mins = totalMins % 60;
 
-  // Lógica de alerta simples (apenas para fretes normais fora do WoTr)
-  const navTime = currentData.navigationTime ?? 0;
+  // Risco de atraso: calcula se o tempo limite é menor que o tempo de viagem do GPS
+  const navTimeMin = Math.round(currentData.routeTimeSeconds / 60);
   const isLateRisk =
     !isWoTr &&
     hasJob &&
-    navTime > 0 &&
-    currentData.remainingDeliveryTime > 0 &&
-    currentData.remainingDeliveryTime < navTime;
+    navTimeMin > 0 &&
+    totalMins > 0 &&
+    totalMins < navTimeMin;
 
   // Definição da cor do texto do tempo restante
   const timeTextColor = isLateRisk
@@ -88,7 +87,7 @@ export const JobSummary: React.FC<GadgetProps> = ({ isDemoMode = false, data }) 
         <div className="flex items-center gap-1.5 truncate pr-2">
           <span className="text-[9px] font-mono font-bold tracking-wider text-slate-400 uppercase">CARGO:</span>
           <span className="text-xs font-bold font-mono text-cyan-300 truncate">
-            {hasJob ? `${currentData.cargoName} (${massTons}t)` : 'NO ACTIVE JOB'}
+            {hasJob ? `${currentData.cargoName} (${currentData.cargoMassTons}t)` : 'NO ACTIVE JOB'}
           </span>
         </div>
 

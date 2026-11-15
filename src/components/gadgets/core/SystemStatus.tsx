@@ -4,9 +4,9 @@ import React from 'react';
 import { GadgetProps } from '@/types/gadget';
 
 interface SystemStatusData {
-    serverConnected: boolean;
-    gameConnected: boolean;
-    gamePaused: boolean;   
+  serverConnected: boolean;
+  gameConnected: boolean;
+  gamePaused: boolean;
 }
 
 export const SystemStatus: React.FC<GadgetProps> = ({ isDemoMode = false, data }) => {
@@ -15,33 +15,22 @@ export const SystemStatus: React.FC<GadgetProps> = ({ isDemoMode = false, data }
     gameConnected: true,
     gamePaused: false,
   };
-  
-    const telemetryData = data as SystemStatusData | undefined;
 
-    const status: SystemStatusData = isDemoMode || !telemetryData
-        ? demoData
-        : {
-            serverConnected: telemetryData.serverConnected ?? false,
-            gameConnected: telemetryData.gameConnected ?? false,
-            gamePaused: telemetryData.gamePaused ?? false,
-        };
+  const telemetryData = data as SystemStatusData | undefined;
 
-    return (
+  const status: SystemStatusData = isDemoMode || !telemetryData
+    ? demoData
+    : {
+        serverConnected: telemetryData.serverConnected ?? false,
+        gameConnected: telemetryData.gameConnected ?? false,
+        gamePaused: telemetryData.gamePaused ?? false,
+      };
+
+  return (
     <div className="w-full h-full bg-slate-900/80 border border-slate-700/60 rounded p-2 flex flex-col justify-between text-xs font-mono select-none backdrop-blur-sm">
-      {/* Cabeçalho do Gadget */}
-      {/* <div className="flex items-center justify-between border-b border-slate-800 pb-1">
-        <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">
-          SISTEMA
-        </span>
-        {isDemoMode && (
-          <span className="text-[9px] bg-amber-500/20 text-amber-400 px-1 rounded border border-amber-500/30 font-sans">
-            DEMO
-          </span>
-        )}
-      </div> */}
-
       {/* Indicadores de Status */}
       <div className="space-y-1 my-auto">
+
         {/* Status do Servidor Backend */}
         <div className="flex items-center justify-between">
           <span className="text-slate-400 text-[11px]">Server:</span>
@@ -77,17 +66,23 @@ export const SystemStatus: React.FC<GadgetProps> = ({ isDemoMode = false, data }
           <span className="text-slate-400 text-[11px]">State:</span>
           <span
             className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${
-              !status.gameConnected
+              isDemoMode
+                ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                : !status.gameConnected
                 ? 'bg-slate-800 text-slate-500'
                 : status.gamePaused
                 ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
                 : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
             }`}
           >
-            {!status.gameConnected ? 'UNAVAILABLE' : status.gamePaused ? 'PAUSED' : 'ON GAME'}
+            { isDemoMode
+              ? 'DEMO' 
+              : !status.gameConnected ? 'UNAVAILABLE' 
+              : status.gamePaused ? 'PAUSED' 
+              : 'ON GAME'}
           </span>
         </div>
       </div>
     </div>
-    )
-    }
+  );
+};

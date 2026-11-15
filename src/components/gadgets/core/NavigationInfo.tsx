@@ -4,28 +4,26 @@ import React from 'react';
 import { GadgetProps } from '@/types/gadget';
 
 interface NavigationData {
-  navigationDistance: number; // metros
-  navigationTime: number; // segundos
+  routeDistanceKm: number; // metros
+  routeTimeSeconds: number;     // segundos
 }
 
 export const NavigationInfo: React.FC<GadgetProps> = ({ isDemoMode = false, data }) => {
-  // Dados para o Modo Demo (842 km e 9h 45m restantes)
   const demoData: NavigationData = {
-    navigationDistance: 842000,
-    navigationTime: 35100,
+    routeDistanceKm: 842,
+    routeTimeSeconds: 35100, // 9h45min
   };
 
   const telemetryData = data as NavigationData | undefined;
-  const currentData: NavigationData = isDemoMode || !telemetryData
+  const currentData: NavigationData = isDemoMode
     ? demoData
     : {
-        navigationDistance: telemetryData.navigationDistance ?? 0,
-        navigationTime: telemetryData.navigationTime ?? 0,
+        routeDistanceKm: telemetryData?.routeDistanceKm ?? 0,
+        routeTimeSeconds: telemetryData?.routeTimeSeconds ?? 0,
       };
 
   // Conversões formatadas
-  const distanceKm = Math.round(currentData.navigationDistance / 1000);
-  const totalMinutes = Math.round(currentData.navigationTime / 60);
+  const totalMinutes = Math.round(currentData.routeTimeSeconds / 60);
   const hours = Math.floor(totalMinutes / 60);
   const minutes = totalMinutes % 60;
 
@@ -62,12 +60,12 @@ export const NavigationInfo: React.FC<GadgetProps> = ({ isDemoMode = false, data
           <div className="flex flex-col">
             <span className="text-[9px] font-mono text-slate-400 uppercase font-semibold">DISTANCE</span>
             <span className="text-sm font-bold font-mono text-cyan-300 leading-tight">
-              {distanceKm > 0 ? `${distanceKm.toLocaleString()} km` : '--'}
+              {currentData.routeDistanceKm > 0 ? `${currentData.routeDistanceKm.toLocaleString()} km` : '--'}
             </span>
           </div>
         </div>
 
-        {/* Tempo Restante (ETA) */}
+        {/* Tempo Estimado de Rota/Navegação (GPS) */}
         <div className="flex items-center gap-2 bg-slate-950/60 border border-slate-800/80 rounded px-2.5 py-1">
           <div className="p-1.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -76,9 +74,9 @@ export const NavigationInfo: React.FC<GadgetProps> = ({ isDemoMode = false, data
             </svg>
           </div>
           <div className="flex flex-col">
-            <span className="text-[9px] font-mono text-slate-400 uppercase font-semibold">REMAINING</span>
+            <span className="text-[9px] font-mono text-slate-400 uppercase font-semibold">NAV TIME</span>
             <span className="text-sm font-bold font-mono text-emerald-400 leading-tight">
-              {currentData.navigationTime > 0 ? `${hours}h ${minutes}m` : '--'}
+              {currentData.routeTimeSeconds > 0 ? `${hours}h ${minutes}m` : '--'}
             </span>
           </div>
         </div>

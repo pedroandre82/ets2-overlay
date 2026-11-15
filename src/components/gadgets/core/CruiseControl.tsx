@@ -2,28 +2,30 @@
 
 import React from 'react';
 import { GadgetProps } from '@/types/gadget';
+import { NormalizedTelemetryData } from '@/adapters/telemetryAdapter';
 
 interface CruiseControlData {
-  enabled: boolean;
-  targetSpeed: number; // km/h
+  cruiseControl: boolean;
+  cruiseControlSpeedKmh: number; // km/h
 }
 
 export const CruiseControl: React.FC<GadgetProps> = ({ isDemoMode = false, data }) => {
   // Dados do modo Demo (desativado com "--")
   const demoData: CruiseControlData = {
-    enabled: false,
-    targetSpeed: 0,
+    cruiseControl: false,
+    cruiseControlSpeedKmh: 48,
   };
 
-  const telemetryData = data as CruiseControlData | undefined;
+  const telemetryData = data as NormalizedTelemetryData | undefined;
+
   const currentData: CruiseControlData = isDemoMode || !telemetryData
     ? demoData
     : {
-        enabled: telemetryData.enabled ?? false,
-        targetSpeed: telemetryData.targetSpeed ?? 0,
+        cruiseControl: telemetryData.cruiseControl ?? false,
+        cruiseControlSpeedKmh: telemetryData.cruiseControlSpeedKmh ?? 0,
       };
 
-  const isActive = currentData.enabled && currentData.targetSpeed > 0;
+  const isActive = currentData.cruiseControl && currentData.cruiseControlSpeedKmh > 0;
 
   return (
     <div className="w-full h-full flex flex-col items-center justify-center relative select-none p-2">
@@ -48,7 +50,7 @@ export const CruiseControl: React.FC<GadgetProps> = ({ isDemoMode = false, data 
         }`}
       >
         <span className="text-2xl font-black tracking-tighter leading-none font-sans">
-          {isActive ? currentData.targetSpeed : '--'}
+          {isActive ? currentData.cruiseControlSpeedKmh : '--'}
         </span>
         <span className="text-[9px] font-bold tracking-wider uppercase mt-0.5 font-sans opacity-80">
           km/h

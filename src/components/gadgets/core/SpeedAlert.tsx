@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { GadgetProps } from '@/types/gadget';
+import { NormalizedTelemetryData } from '@/adapters/telemetryAdapter';
 
 interface SpeedAlertData {
   speedLimit: number; // km/h
@@ -32,11 +33,11 @@ export const SpeedAlert: React.FC<GadgetProps> = ({ isDemoMode = false, data }) 
   useEffect(() => {
     if (isDemoMode) return;
 
-    const telemetryData = data as SpeedAlertData | undefined;
-    const currentLimit = telemetryData?.speedLimit ?? 0;
+    const telemetryData = data as NormalizedTelemetryData | undefined;
+    const currentLimit = telemetryData?.speedLimitKmh ?? 0;
 
-    // Dispara o alerta sempre que o limite mudar e for maior que 0
-    if (currentLimit > 0 && currentLimit !== prevLimitRef.current) {
+    // Dispara o alerta sempre que o limite mudar
+    if (currentLimit !== prevLimitRef.current) {
       prevLimitRef.current = currentLimit;
       setSpeedLimit(currentLimit);
       triggerAlert();

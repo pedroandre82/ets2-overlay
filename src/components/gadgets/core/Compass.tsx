@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { GadgetProps } from '@/types/gadget';
+import { NormalizedTelemetryData } from '@/adapters/telemetryAdapter';
 
 interface CompassData {
   heading: number; // 0 a 360 graus

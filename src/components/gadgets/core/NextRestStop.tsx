@@ -2,36 +2,31 @@
 
 import React from 'react';
 import { GadgetProps } from '@/types/gadget';
-
-interface NextRestStopData {
-  nextRestStop: number; // Tempo restante (em minutos)
-}
+import { NormalizedTelemetryData } from '@/adapters/telemetryAdapter';
 
 export const NextRestStop: React.FC<GadgetProps> = ({ isDemoMode = false, data }) => {
-  // Dados do Modo Demo (Simulando 8 horas e 30 minutos restantes = 510 minutos)
-  const demoData: NextRestStopData = {
-    nextRestStop: 510,
+  const demoData = {
+    nextRestStop: 510, // 8h 30m no modo demo
   };
 
-  const telemetryData = data as NextRestStopData | undefined;
+  const telemetryData = data as NormalizedTelemetryData | undefined;
 
-  // Tratamento para ler minutos (ou converter caso venha em segundos)
-  let rawMinutes = isDemoMode || !telemetryData || telemetryData.nextRestStop === undefined
+  // 1. Define o valor bruto a ser utilizado
+  const currentMinutes = isDemoMode
     ? demoData.nextRestStop
-    : telemetryData.nextRestStop;
+    : telemetryData?.nextRestStopMin;
 
-  // Se o valor for maior que 2000, assume que veio em segundos e converte para minutos
-  if (rawMinutes > 2000) {
-    rawMinutes = Math.floor(rawMinutes / 60);
-  }
+  // 2. Valida se o dado existe
+  const hasData = currentMinutes !== undefined && currentMinutes !== null;
 
-  const totalMins = Math.max(0, rawMinutes);
+  // 3. Formatação
+  const totalMins = hasData ? Math.max(0, currentMinutes) : 0;
   const hours = Math.floor(totalMins / 60);
   const mins = totalMins % 60;
 
-  // Estados de alerta (menos de 120 min = aviso; 0 min = urgente)
-  const isWarning = totalMins > 0 && totalMins <= 120;
-  const isUrgent = totalMins === 0;
+  // Estados de alerta
+  const isWarning = hasData && totalMins > 0 && totalMins <= 120;
+  const isUrgent = hasData && totalMins === 0;
 
   return (
     <div className="w-full h-full bg-slate-900/80 border border-slate-700/60 rounded p-2 flex flex-col justify-between select-none relative overflow-hidden backdrop-blur-sm">
@@ -42,7 +37,7 @@ export const NextRestStop: React.FC<GadgetProps> = ({ isDemoMode = false, data }
         </span>
       )}
 
-      {/* Header com Ícone de Parada */}
+      {/* Header */}
       <div className="flex items-center justify-between border-b border-slate-800 pb-1">
         <span className="text-[9px] font-mono font-bold tracking-wider text-slate-400 uppercase flex items-center gap-1">
           <svg className="w-3 h-3 text-cyan-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -52,27 +47,30 @@ export const NextRestStop: React.FC<GadgetProps> = ({ isDemoMode = false, data }
         </span>
       </div>
 
-      {/* Conteúdo Central */}
+      {/* Display */}
       <div className="flex items-center justify-between my-auto px-1 font-mono">
         <div className="flex flex-col">
           <span className="text-[9px] text-slate-400 font-semibold uppercase">REST IN:</span>
           <span
             className={`text-base font-bold font-mono leading-tight ${
-              isUrgent
+              !hasData
+                ? 'text-slate-500'
+                : isUrgent
                 ? 'text-red-500 animate-pulse'
                 : isWarning
                 ? 'text-amber-400 animate-pulse'
                 : 'text-emerald-400'
             }`}
           >
-            {hours}h {mins}m
+            {hasData ? `${hours}h ${mins}m` : '--'}
           </span>
         </div>
 
-        {/* Ícone Indicador de Estado */}
         <div
           className={`p-1.5 rounded border ${
-            isUrgent
+            !hasData
+              ? 'bg-slate-800/50 border-slate-700/50 text-slate-500'
+              : isUrgent
               ? 'bg-red-500/20 border-red-500/40 text-red-400'
               : isWarning
               ? 'bg-amber-500/20 border-amber-500/40 text-amber-400'
@@ -85,19 +83,21 @@ export const NextRestStop: React.FC<GadgetProps> = ({ isDemoMode = false, data }
         </div>
       </div>
 
-      {/* Footer de Status */}
+      {/* Footer Status */}
       <div className="flex items-center justify-between text-[9px] font-mono border-t border-slate-800/80 pt-1">
         <span className="text-slate-400 uppercase">STATUS:</span>
         <span
           className={`font-bold ${
-            isUrgent
-              ? 'text-red-400 font-bold'
+            !hasData
+              ? 'text-slate-500'
+              : isUrgent
+              ? 'text-red-400'
               : isWarning
-              ? 'text-amber-400 font-bold'
+              ? 'text-amber-400'
               : 'text-slate-300'
           }`}
         >
-          {isUrgent ? 'REST NOW' : isWarning ? 'REST SOON' : 'OK'}
+          {hasData ? (isUrgent ? 'REST NOW' : isWarning ? 'REST SOON' : 'OK') : '--'}
         </span>
       </div>
     </div>

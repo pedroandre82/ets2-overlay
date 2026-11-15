@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { GadgetProps } from '@/types/gadget';
+import { NormalizedTelemetryData } from '@/adapters/telemetryAdapter';
 
 interface TrailerInfoData {
   attached: boolean;
@@ -21,15 +22,19 @@ export const TrailerInfo: React.FC<GadgetProps> = ({ isDemoMode = false, data })
     chainType: 'single',
   };
 
-  const telemetryData = data as TrailerInfoData | undefined;
-  const currentData: TrailerInfoData = isDemoMode || !telemetryData
+  const telemetryData = data as NormalizedTelemetryData | undefined;
+
+  // O primeiro reboque engatado está na posição 0 do array de trailers
+  const firstTrailer = telemetryData?.trailers?.[0];
+
+  const currentData: TrailerInfoData = isDemoMode
     ? demoData
     : {
-        attached: telemetryData.attached ?? false,
-        brand: telemetryData.brand ?? '',
-        name: telemetryData.name ?? '',
-        bodyType: telemetryData.bodyType ?? '',
-        chainType: telemetryData.chainType ?? '',
+        attached: telemetryData?.attached ?? false,
+        brand: firstTrailer?.brand ?? '',
+        name: firstTrailer?.name ?? '',
+        bodyType: firstTrailer?.bodyType ?? '',
+        chainType: firstTrailer?.chainType ?? '',
       };
 
   const isAttached = currentData.attached;
