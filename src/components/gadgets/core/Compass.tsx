@@ -4,10 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { GadgetProps } from '@/types/gadget';
 import { NormalizedTelemetryData } from '@/adapters/telemetryAdapter';
 
-interface CompassData {
-  heading: number; // 0 a 360 graus
-}
-
 // Retorna a sigla cardeal em inglês
 const getCardinalDirection = (deg: number): string => {
   const normalized = ((deg % 360) + 360) % 360;
@@ -24,7 +20,7 @@ const getCardinalDirection = (deg: number): string => {
 export const Compass: React.FC<GadgetProps> = ({ isDemoMode = false, data }) => {
   const [heading, setHeading] = useState<number>(0);
 
-  // --- MODO DEMO: ROTAÇÃO CONTÍNUA LENTA ---
+  // --- MODO DEMO: ROTAÇÃO CONTÍNUA LENTA DA FITA ---
   useEffect(() => {
     if (!isDemoMode) return;
 
@@ -38,28 +34,40 @@ export const Compass: React.FC<GadgetProps> = ({ isDemoMode = false, data }) => 
     return () => cancelAnimationFrame(animFrameId);
   }, [isDemoMode]);
 
-  // --- TELEMETRIA REAL ---
+  // --- TELEMETRIA REAL (ALINHADA COM O ADAPTER) ---
   useEffect(() => {
     if (isDemoMode) return;
-    const telemetryData = data as CompassData | undefined;
-    if (telemetryData?.heading !== undefined) {
+
+    const telemetryData = data as NormalizedTelemetryData | undefined;
+    if (telemetryData?.heading !== undefined && telemetryData?.heading !== null) {
       setHeading(((telemetryData.heading % 360) + 360) % 360);
     }
   }, [data, isDemoMode]);
+
+  const telemetryData = data as NormalizedTelemetryData | undefined;
+  const hasData = isDemoMode || (telemetryData?.heading !== undefined && telemetryData?.heading !== null);
 
   // Marcadores da fita horizontal a cada 15 graus
   const markers = [];
   for (let deg = 0; deg < 360; deg += 15) {
     let label = '';
     let isMain = false;
-    if (deg === 0) { label = 'N'; isMain = true; }
-    else if (deg === 45) label = 'NE';
-    else if (deg === 90) { label = 'E'; isMain = true; }
-    else if (deg === 135) label = 'SE';
-    else if (deg === 180) { label = 'S'; isMain = true; }
-    else if (deg === 225) label = 'SW';
-    else if (deg === 270) { label = 'W'; isMain = true; }
-    else if (deg === 315) label = 'NW';
+    if (deg === 0) {
+      label = 'N';
+      isMain = true;
+    } else if (deg === 45) label = 'NE';
+    else if (deg === 90) {
+      label = 'E';
+      isMain = true;
+    } else if (deg === 135) label = 'SE';
+    else if (deg === 180) {
+      label = 'S';
+      isMain = true;
+    } else if (deg === 225) label = 'SW';
+    else if (deg === 270) {
+      label = 'W';
+      isMain = true;
+    } else if (deg === 315) label = 'NW';
 
     markers.push({ deg, label, isMain });
   }
@@ -78,13 +86,16 @@ export const Compass: React.FC<GadgetProps> = ({ isDemoMode = false, data }) => 
 
       {/* Header */}
       <div className="flex items-center justify-center text-[10px] font-mono border-b border-slate-800 pb-0.5">
-        {/* <span className="font-bold tracking-wider text-slate-400 uppercase">COMPASS</span> */}
-        <span className="text-cyan-400 font-bold">
-          {String(currentHeading).padStart(3, '0')}° <span className="text-emerald-400">{cardinalText}</span>
-        </span>
+        {hasData ? (
+          <span className="text-cyan-400 font-bold">
+            {String(currentHeading).padStart(3, '0')}° <span className="text-emerald-400">{cardinalText}</span>
+          </span>
+        ) : (
+          <span className="text-slate-500 font-bold">---° --</span>
+        )}
       </div>
 
-      {/* Fita Deslizante da Bússola */}
+      {/* Fita Deslizante da Bússola (Layout Original) */}
       <div className="relative w-full h-10 my-auto bg-slate-950/70 rounded border border-slate-800/80 overflow-hidden flex items-center">
         {/* Marcador Central Fixo */}
         <div className="absolute left-1/2 top-0 -translate-x-1/2 w-0.5 h-full bg-cyan-400 z-20 shadow-[0_0_8px_rgba(34,211,238,0.8)]" />
@@ -92,41 +103,42 @@ export const Compass: React.FC<GadgetProps> = ({ isDemoMode = false, data }) => 
 
         {/* Graduação e Letras */}
         <div className="w-full h-full relative">
-          {markers.map((m) => {
-            let diff = heading - m.deg;
-            while (diff < -180) diff += 360;
-            while (diff > 180) diff -= 360;
+          {hasData &&
+            markers.map((m) => {
+              let diff = heading - m.deg;
+              while (diff < -180) diff += 360;
+              while (diff > 180) diff -= 360;
 
-            const pxOffset = diff * 1.8;
-            const leftPx = 72 + pxOffset; // Centro do slot 160px
+              const pxOffset = diff * 1.8;
+              const leftPx = 72 + pxOffset; // Centro do slot
 
-            if (leftPx < -20 || leftPx > 160) return null;
+              if (leftPx < -20 || leftPx > 160) return null;
 
-            return (
-              <div
-                key={m.deg}
-                style={{ left: `${leftPx}px` }}
-                className="absolute top-0 bottom-0 -translate-x-1/2 flex flex-col items-center justify-between py-1"
-              >
+              return (
                 <div
-                  className={`w-0.5 rounded-full ${
-                    m.isMain ? 'h-3 bg-cyan-300' : m.label ? 'h-2 bg-slate-400' : 'h-1.5 bg-slate-600'
-                  }`}
-                />
-                <span
-                  className={`text-[9px] font-mono font-bold leading-none ${
-                    m.deg === 0
-                      ? 'text-red-400 font-extrabold'
-                      : m.isMain
-                      ? 'text-cyan-300'
-                      : 'text-slate-400'
-                  }`}
+                  key={m.deg}
+                  style={{ left: `${leftPx}px` }}
+                  className="absolute top-0 bottom-0 -translate-x-1/2 flex flex-col items-center justify-between py-1"
                 >
-                  {m.label || '•'}
-                </span>
-              </div>
-            );
-          })}
+                  <div
+                    className={`w-0.5 rounded-full ${
+                      m.isMain ? 'h-3 bg-cyan-300' : m.label ? 'h-2 bg-slate-400' : 'h-1.5 bg-slate-600'
+                    }`}
+                  />
+                  <span
+                    className={`text-[9px] font-mono font-bold leading-none ${
+                      m.deg === 0
+                        ? 'text-red-400 font-extrabold'
+                        : m.isMain
+                        ? 'text-cyan-300'
+                        : 'text-slate-400'
+                    }`}
+                  >
+                    {m.label || '•'}
+                  </span>
+                </div>
+              );
+            })}
         </div>
       </div>
     </div>
