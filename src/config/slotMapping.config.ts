@@ -1,7 +1,7 @@
 export const slotMapping: Record<string, string | null> = {
   'top-corner-left': 'core:next-rest-stop',
   'top-1': 'core:navigation-info',
-  'top-2': null,
+  'top-2': 'core:truck-diagnostics',
   'top-center': 'core:compass',
   'top-3': 'core:job-summary',
   'top-4': 'core:trailer-info',
@@ -9,7 +9,7 @@ export const slotMapping: Record<string, string | null> = {
   'left-1': 'core:speed-alert',
   'left-2': 'core:cruise-control',
   'left-3': 'core:speed-and-gear',
-  'left-4': null,
+  'left-4': 'core:tachometer',
   'left-5': 'core:fuel-info',
   'left-bottom': 'core:adblue-info',
   'right-1': null,
@@ -23,5 +23,5 @@ export const slotMapping: Record<string, string | null> = {
   'bottom-2': 'core:brake-info',
   'bottom-3': null,
   'bottom-4': null,
-  'bottom-corner-right': null,
+  'bottom-corner-right': 'core:game-clock',
 };

@@ -6,6 +6,7 @@ import { NormalizedTelemetryData } from '@/adapters/telemetryAdapter';
 
 interface SpeedAndGearData {
   speedKmh: number;
+  speedLimitKmh: number;
   gear: number;
   shifterType: string;
   totalGearsForward: number;
@@ -16,6 +17,7 @@ export const SpeedAndGear: React.FC<GadgetProps> = ({ isDemoMode = false, data }
   // Estado para simulação no Modo DEMO
   const [demoState, setDemoState] = useState<SpeedAndGearData>({
     speedKmh: 78,
+    speedLimitKmh: 80,
     gear: 10,
     shifterType: 'automatic',
     totalGearsForward: 14,
@@ -28,11 +30,11 @@ export const SpeedAndGear: React.FC<GadgetProps> = ({ isDemoMode = false, data }
     const interval = setInterval(() => {
       setDemoState((prev) => {
         const nextGear = prev.gear >= 4 ? -1 : prev.gear + 1;
-        const nextSpeed = Math.min(90, prev.speedKmh + 3);
+        const nextSpeed = prev.speedKmh >= 92 ? 40 : prev.speedKmh + 6;
         return {
           ...prev,
           gear: nextGear,
-          speedKmh: nextSpeed >= 90 ? 30 : nextSpeed,
+          speedKmh: nextSpeed,
         };
       });
     }, 2500);
@@ -45,14 +47,19 @@ export const SpeedAndGear: React.FC<GadgetProps> = ({ isDemoMode = false, data }
   const currentData: SpeedAndGearData = isDemoMode
     ? demoState
     : {
-        speedKmh: Math.round(telemetryData?.speedKmh ?? 0),
+        speedKmh: Math.abs(Math.round(telemetryData?.speedKmh ?? 0)),
+        speedLimitKmh: Math.round(telemetryData?.speedLimitKmh ?? 0),
         gear: telemetryData?.gear ?? 0,
         shifterType: telemetryData?.shifterType ?? 'automatic',
         totalGearsForward: telemetryData?.totalGearsForward ?? 12,
         totalGearsReverse: telemetryData?.totalGearsReverse ?? 2,
       };
 
-  // Lógica de formatação precisa da marcha
+  // Avalia se o caminhão está acima do limite de velocidade da via
+  const isSpeeding =
+    currentData.speedLimitKmh > 0 && currentData.speedKmh > currentData.speedLimitKmh;
+
+  // Lógica de formatação da marcha
   const formatGearDisplay = (
     gear: number,
     shifterType: string,
@@ -71,7 +78,7 @@ export const SpeedAndGear: React.FC<GadgetProps> = ({ isDemoMode = false, data }
       const label = totalReverse >= 2 ? `R${revNum}` : 'R';
       return {
         label,
-        colorClass: 'text-red-400 border-red-500/40 bg-red-500/10 font-black animate-pulse',
+        colorClass: 'text-white border-white/60 bg-white/10 font-black animate-pulse',
       };
     }
 
@@ -120,7 +127,7 @@ export const SpeedAndGear: React.FC<GadgetProps> = ({ isDemoMode = false, data }
   );
 
   return (
-    <div className="w-full h-full bg-slate-900/80 border border-slate-700/60 rounded p-2 flex flex-col justify-between select-none relative overflow-hidden backdrop-blur-sm font-mono">
+    <div className="w-full h-full bg-slate-900/80 border border-slate-700/60 rounded p-1.5 flex flex-col justify-between select-none relative overflow-hidden backdrop-blur-sm font-mono">
       {/* Badge DEMO */}
       {isDemoMode && (
         <span className="absolute top-1 right-1 text-[7px] font-bold bg-amber-500/20 text-amber-400 px-1 rounded border border-amber-500/30 z-10">
@@ -128,27 +135,41 @@ export const SpeedAndGear: React.FC<GadgetProps> = ({ isDemoMode = false, data }
         </span>
       )}
 
-      {/* Seção 1: Velocidade Atual (Destaque Superior) */}
-      <div className="flex flex-col items-center justify-center pt-1">
-        <span className="text-[8px] font-bold tracking-wider text-slate-400 uppercase">SPEED</span>
-        <div className="flex items-baseline gap-0.5 leading-none mt-0.5">
-          <span className="text-3xl font-black text-slate-100 tracking-tight">
+      {/* Seção Superior: Velocidade Atual (Destaque ampliado + Alerta de Excesso) */}
+      <div className="flex-1 flex flex-col items-center justify-center pt-0.5">
+        <div className="flex items-center gap-1">
+          <span className="text-[7px] font-bold tracking-wider text-slate-400 uppercase">SPEED</span>
+          {isSpeeding && (
+            <span className="text-[7px] font-bold bg-red-500/20 text-red-400 px-1 rounded border border-red-500/40 animate-pulse">
+              EXCEEDED
+            </span>
+          )}
+        </div>
+
+        <div className="flex items-baseline gap-0.5 leading-none mt-1">
+          <span
+            className={`text-5xl font-black tracking-tight transition-colors duration-200 ${
+              isSpeeding ? 'text-red-500 animate-pulse' : 'text-slate-100'
+            }`}
+          >
             {Math.abs(currentData.speedKmh)}
           </span>
-          <span className="text-[10px] font-bold text-slate-400 uppercase">km/h</span>
+          <span className={`text-[9px] font-bold uppercase ${isSpeeding ? 'text-red-400' : 'text-slate-400'}`}>
+            km/h
+          </span>
         </div>
       </div>
 
       {/* Divisor Visual Suave */}
-      <div className="w-full h-[1px] bg-slate-800/80 my-1" />
+      <div className="w-full h-px bg-slate-800/80 my-0.5" />
 
-      {/* Seção 2: Marcha Atual (Destaque Inferior em Card) */}
-      <div className="flex flex-col items-center justify-center pb-0.5">
-        <span className="text-[8px] font-bold tracking-wider text-slate-400 uppercase mb-1">GEAR</span>
+      {/* Seção Inferior: Marcha Atual (Card mais compacto) */}
+      <div className="flex flex-col items-center justify-center pb-0.5 shrink-0">
+        <span className="text-[7px] font-bold tracking-wider text-slate-400 uppercase mb-0.5">GEAR</span>
         <div
-          className={`w-16 h-9 rounded flex items-center justify-center border transition-all duration-200 ${gearInfo.colorClass}`}
+          className={`w-14 h-7 rounded flex items-center justify-center border transition-all duration-200 ${gearInfo.colorClass}`}
         >
-          <span className="text-xl tracking-wider font-extrabold">{gearInfo.label}</span>
+          <span className="text-base tracking-wider font-extrabold">{gearInfo.label}</span>
         </div>
       </div>
     </div>

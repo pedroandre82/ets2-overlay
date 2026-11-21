@@ -54,6 +54,7 @@ export interface NormalizedTelemetryData {
   simulationTime: number;
   renderTime: number;
   multiplayerTimeOffset: number;
+  timeAbs: number;
 
   // 2. Física & Vetores de Aceleração/Orientação
   accelerationX: number; // m/s²
@@ -138,7 +139,9 @@ export interface NormalizedTelemetryData {
   routeDistanceKm: number; routeDistanceMeters: number; routeTimeSeconds: number; nextRestStopMin: number;
 
   // 10. Veículo
-  truckBrand: string; truckBrandId: string; truckName: string; truckId: string; truckLicensePlate: string; truckLicensePlateCountry: string;
+  truckBrand: string; truckBrandId: string; truckName: string; 
+  truckId: string; truckLicensePlate: string; truckLicensePlateCountry: string;
+  truckLicensePlateCountryId: string;
 
   // 11. Reboques & Rodas
   attached: boolean;
@@ -242,6 +245,7 @@ if (hasValidDeliveryTime) {
     serverConnected: true, gameConnected: Boolean(src.sdkActive), gamePaused: Boolean(src.paused), gameScale: src.scale ?? 19,
     gameVersion: `${src.versionMajor ?? 1}.${src.versionMinor ?? 0}`, telemetryPluginRevision: src.telemetryPluginRevision ?? 0,
     simulationTime: src.simulatedTime ?? 0, renderTime: src.renderTime ?? 0, multiplayerTimeOffset: src.multiplayerTimeOffset ?? 0,
+    timeAbs: src.timeAbs ?? 0,
 
     accelerationX: ax, accelerationY: ay, accelerationZ: az,
     gForceX: Number((ax / 9.81).toFixed(2)), gForceY: Number((ay / 9.81).toFixed(2)), gForceZ: Number((az / 9.81).toFixed(2)), gForceTotal: Number(gTotal.toFixed(2)),
@@ -294,7 +298,7 @@ if (hasValidDeliveryTime) {
 
     routeDistanceKm: Math.round(rawRouteDistanceMeters / 1000), routeDistanceMeters: rawRouteDistanceMeters, routeTimeSeconds: src.routeTime ?? 0, nextRestStopMin: src.restStop ?? 0,
 
-    truckBrand: src.truckBrand ?? 'Volvo', truckBrandId: src.truckBrandId ?? 'volvo', truckName: src.truckName ?? 'Truck', truckId: src.truckId ?? '', truckLicensePlate: src.truckLicensePlate ?? '', truckLicensePlateCountry: src.truckLicensePlateCountry ?? '',
+    truckBrand: src.truckBrand ?? 'Volvo', truckBrandId: src.truckBrandId ?? 'volvo', truckName: src.truckName ?? 'Truck', truckId: src.truckId ?? '', truckLicensePlate: src.truckLicensePlate ?? '', truckLicensePlateCountry: src.truckLicensePlateCountry ?? '', truckLicensePlateCountryId: src.truckLicensePlateCountryId ?? '',
 
     attached: Boolean(firstTrailer?.attached), trailers: parsedTrailers, truckWheels: parsedWheels,
 
@@ -307,7 +311,7 @@ if (hasValidDeliveryTime) {
 
 function createEmptyTelemetryData(): NormalizedTelemetryData {
   return {
-    serverConnected: false, gameConnected: false, gamePaused: false, gameScale: 19, gameVersion: '1.0', telemetryPluginRevision: 0, simulationTime: 0, renderTime: 0, multiplayerTimeOffset: 0,
+    serverConnected: false, gameConnected: false, gamePaused: false, gameScale: 19, gameVersion: '1.0', telemetryPluginRevision: 0, simulationTime: 0, renderTime: 0, multiplayerTimeOffset: 0, timeAbs: 0,
     accelerationX: 0, accelerationY: 0, accelerationZ: 0, gForceX: 0, gForceY: 0, gForceZ: 0, gForceTotal: 0, lvAccelerationX: 0, lvAccelerationY: 0, lvAccelerationZ: 0, avAccelerationX: 0, avAccelerationY: 0, avAccelerationZ: 0, aaAccelerationX: 0, aaAccelerationY: 0, aaAccelerationZ: 0,
     cabinAAX: 0, cabinAAY: 0, cabinAAZ: 0, cabinAVX: 0, cabinAVY: 0, cabinAVZ: 0, cabinOffsetX: 0, cabinOffsetY: 0, cabinOffsetZ: 0, cabinRotationX: 0, cabinRotationY: 0, cabinRotationZ: 0, headOffsetX: 0, headOffsetY: 0, headOffsetZ: 0, headRotationX: 0, headRotationY: 0, headRotationZ: 0, coordinateX: 0, coordinateY: 0, coordinateZ: 0, rotationX: 0, rotationY: 0, rotationZ: 0, heading: 0,
     speedMs: 0, speedKmh: 0, speedMph: 0, speedLimitMs: 0, speedLimitKmh: 0, speedLimitMph: 0, engineRpm: 0, engineRpmMax: 1900, gear: 0, gearDashboard: 0, totalGearsForward: 12, totalGearsReverse: 2, gearDifferential: 0, shifterType: 'automatic', shifterSlot: 0, selectorCount: 0, odometerKm: 0,
@@ -317,7 +321,7 @@ function createEmptyTelemetryData(): NormalizedTelemetryData {
     wearEnginePct: 0, wearTransmissionPct: 0, wearCabinPct: 0, wearChassisPct: 0, wearWheelsPct: 0,
     onJob: false, cargoLoaded: false, cargoName: '', cargoId: '', cargoMassKg: 0, cargoMassTons: 0, cargoDamagePct: 0, unitCount: 0, unitMassKg: 0, citySource: '', citySourceId: '', companySource: '', companySourceId: '', cityDestination: '', cityDestinationId: '', companyDestination: '', companyDestinationId: '', specialJob: false, jobMarket: '', jobIncome: 0, jobDeliveryTimeRemainingMin: 0, plannedDistanceKm: 0,
     routeDistanceKm: 0, routeDistanceMeters: 0, routeTimeSeconds: 0, nextRestStopMin: 0,
-    truckBrand: '', truckBrandId: '', truckName: '', truckId: '', truckLicensePlate: '', truckLicensePlateCountry: '',
+    truckBrand: '', truckBrandId: '', truckName: '', truckId: '', truckLicensePlate: '', truckLicensePlateCountry: '', truckLicensePlateCountryId: '',
     attached: false, trailers: [], truckWheels: [],
     fined: false, fineAmount: 0, fineOffence: '', tollgate: false, tollgatePayAmount: 0, ferry: false, ferryPayAmount: 0, ferrySourceName: '', ferryTargetName: '', train: false, trainPayAmount: 0, trainSourceName: '', trainTargetName: '', refuel: false, refuelAmountLiters: 0, refuelPayed: false,
   };

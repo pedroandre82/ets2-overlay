@@ -12,6 +12,9 @@ import { FuelInfo } from './core/FuelInfo';
 import { BrakeInfo } from './core/BrakeInfo';
 import { AdBlueInfo } from './core/AdBlueInfo';
 import { SpeedAndGear } from './core/SpeedAndGear';
+import { Tachometer } from './core/Tachometer';
+import { TruckDiagnostics } from './core/TruckDiagnostics';
+import { GameClock } from './core/GameClock';
 
 export const GADGET_REGISTRY: Record<string, GadgetComponent> = {
   'core:system-status': SystemStatus,
@@ -26,6 +29,9 @@ export const GADGET_REGISTRY: Record<string, GadgetComponent> = {
   'core:brake-info': BrakeInfo,
   'core:adblue-info': AdBlueInfo,
   'core:speed-and-gear': SpeedAndGear,
+  'core:tachometer': Tachometer,
+  'core:truck-diagnostics': TruckDiagnostics,
+  'core:game-clock': GameClock,
 };
 
 interface PlaceholderProps {
