@@ -27,7 +27,7 @@ export const JobSummary: React.FC<GadgetProps> = ({ isDemoMode = false, data }) 
     cityDestination: 'Verona',
     companyDestination: 'Transinet',
     specialJob: false,
-    jobMarket: 'external_contracts',
+    jobMarket: 'quick_job',
     jobDeliveryTimeRemainingMin: 1080, // 18 horas reais restantes no WoTr
     routeTimeSeconds: 36000, // 10h no GPS
   };
@@ -121,30 +121,38 @@ export const JobSummary: React.FC<GadgetProps> = ({ isDemoMode = false, data }) 
         </div>
       </div>
 
-      {/* Linha Inferior: Prazo + Badge WOTR */}
-      <div className="flex items-center justify-between text-[10px] font-mono border-t border-slate-800/80 pt-1">
-        <div className="flex items-center gap-1.5">
-          <span className="text-slate-400 font-semibold uppercase">DELIVERY TIME:</span>
-          {isWoTr && (
-            <span className="text-[8px] font-mono bg-cyan-500/20 text-cyan-300 px-1 rounded border border-cyan-500/40 font-bold">
-              WOTR (REAL)
-            </span>
-          )}
-        </div>
-
-        {hasJob ? (
-          <div className="flex items-center gap-1.5">
-            {isLateRisk && (
-              <span className="text-[8px] bg-red-500/20 text-red-400 px-1 rounded border border-red-500/40 font-bold animate-pulse">
-                LATE RISK
-              </span>
-            )}
-            <span className={`font-bold ${timeTextColor}`}>
-              {hours}h {mins}m
-            </span>
+      {/* Linha Inferior: Alterada unicamente para tratar WoTr sem tempo válido */}
+      <div className="border-t border-slate-800/80 pt-1 font-mono text-[10px]">
+        {hasJob && isWoTr && totalMins === 0 ? (
+          <div className="w-full text-center font-bold text-cyan-400 uppercase tracking-wider">
+            World of Trucks Delivery Job
           </div>
         ) : (
-          <span className="text-slate-500">--</span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5">
+              <span className="text-slate-400 font-semibold uppercase">DELIVERY TIME:</span>
+              {isWoTr && (
+                <span className="text-[8px] bg-cyan-500/20 text-cyan-300 px-1 rounded border border-cyan-500/40 font-bold">
+                  WOTR (REAL)
+                </span>
+              )}
+            </div>
+
+            {hasJob ? (
+              <div className="flex items-center gap-1.5">
+                {isLateRisk && (
+                  <span className="text-[8px] bg-red-500/20 text-red-400 px-1 rounded border border-red-500/40 font-bold animate-pulse">
+                    LATE RISK
+                  </span>
+                )}
+                <span className={`font-bold ${timeTextColor}`}>
+                  {hours}h {mins}m
+                </span>
+              </div>
+            ) : (
+              <span className="text-slate-500">--</span>
+            )}
+          </div>
         )}
       </div>
     </div>

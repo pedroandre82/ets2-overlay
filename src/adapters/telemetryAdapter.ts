@@ -199,6 +199,45 @@ export const adaptTelemetryData = (raw: any): NormalizedTelemetryData => {
 
   const firstTrailer = parsedTrailers[0];
 
+const isWoTr = Boolean(src.jobMarket && src.jobMarket.includes('external'));
+
+const rawDeliveryTime = src.timeAbsDelivery ?? 0;
+const currentGameTime = src.timeAbs ?? 0;
+
+// Considera válido apenas se for maior que zero e menor que UINT32_MAX (4294967295)
+const hasValidDeliveryTime = rawDeliveryTime > 0 && rawDeliveryTime < 4294967295;
+
+let jobDeliveryTimeRemainingMin = 0;
+
+if (hasValidDeliveryTime) {
+  if (isWoTr) {
+    const currentRealTimeMin = Math.floor(Date.now() / 60000);
+    const deliveryTimeMin = rawDeliveryTime > 100000000
+      ? Math.floor(rawDeliveryTime / 60)
+      : rawDeliveryTime;
+
+    jobDeliveryTimeRemainingMin = deliveryTimeMin > currentRealTimeMin
+      ? (deliveryTimeMin - currentRealTimeMin)
+      : 0;
+  } else {
+    // Frete Single-Player normal
+    jobDeliveryTimeRemainingMin = rawDeliveryTime > currentGameTime
+      ? (rawDeliveryTime - currentGameTime)
+      : 0;
+  }
+}
+
+  // LOG
+  // console.log('[Telemetry Debug - Job Delivery]', { 
+  //   jobMarket: src.jobMarket, 
+  //   rawDeliveryTime: src.timeAbsDelivery, 
+  //   currentGameTime: src.timeAbs, 
+  //   dateNowSec: Math.floor(Date.now() / 1000), 
+  //   dateNowMin: Math.floor(Date.now() / 60000), 
+  //   isWoTr, 
+  //   jobDeliveryTimeRemainingMin,
+  // });
+
   return {
     serverConnected: true, gameConnected: Boolean(src.sdkActive), gamePaused: Boolean(src.paused), gameScale: src.scale ?? 19,
     gameVersion: `${src.versionMajor ?? 1}.${src.versionMinor ?? 0}`, telemetryPluginRevision: src.telemetryPluginRevision ?? 0,
@@ -217,7 +256,7 @@ export const adaptTelemetryData = (raw: any): NormalizedTelemetryData => {
     headRotationX: src.headOffsetrotationX ?? 0, headRotationY: src.headOffsetrotationY ?? 0, headRotationZ: src.headOffsetrotationZ ?? 0,
     coordinateX: src.coordinateX ?? 0, coordinateY: src.coordinateY ?? 0, coordinateZ: src.coordinateZ ?? 0,
     rotationX: rawRotationX, rotationY: src.rotationY ?? 0, rotationZ: src.rotationZ ?? 0,
-    heading: Math.round((((rawRotationX * 360) % 360 + 360) % 360)),
+    heading: Math.round((((360 - (rawRotationX * 360)) % 360 + 360) % 360)),
 
     speedMs: rawSpeedMs, speedKmh: Math.round(rawSpeedMs * 3.6), speedMph: Math.round(rawSpeedMs * 2.23694),
     speedLimitMs: rawLimitMs, speedLimitKmh: Math.round(rawLimitMs * 3.6), speedLimitMph: Math.round(rawLimitMs * 2.23694),
@@ -233,7 +272,7 @@ export const adaptTelemetryData = (raw: any): NormalizedTelemetryData => {
     cruiseControl: Boolean(src.cruiseControl), cruiseControlSpeedKmh: Math.round(rawCruiseMs * 3.6), cruiseControlSpeedMph: Math.round(rawCruiseMs * 2.23694),
     differentialLock: Boolean(src.differentialLock), liftAxle: Boolean(src.liftAxle || src.liftAxleIndicator), wipers: Boolean(src.wipers),
 
-    fuelLiters: Math.round(src.fuel ?? 0), fuelCapacityLiters: Math.round(src.fuelCapacity ?? 0), fuelAvgConsumption: Number((src.fuelAvgConsumption ?? 0).toFixed(1)),
+    fuelLiters: Math.round(src.fuel ?? 0), fuelCapacityLiters: Math.round(src.fuelCapacity ?? 0), fuelAvgConsumption: src.fuelAvgConsumption ?? 0,
     fuelRangeKm: Math.round(src.fuelRange ?? 0), fuelWarning: Boolean(src.fuelWarning),
     adblueLiters: Math.round(src.adblue ?? 0), adblueCapacityLiters: Math.round(src.adblueCapacity ?? 0), adblueWarning: Boolean(src.adblueWarning),
     airPressure: Math.round(src.airPressure ?? 0), airPressureWarning: Boolean(src.airPressureWarning), airPressureEmergency: Boolean(src.airPressureEmergency),
@@ -251,7 +290,7 @@ export const adaptTelemetryData = (raw: any): NormalizedTelemetryData => {
     cargoMassTons: Number(((src.cargoMass ?? 0) / 1000).toFixed(1)), cargoDamagePct: Math.round((src.cargoDamage ?? 0) * 100), unitCount: src.unitCount ?? 0, unitMassKg: src.unitMass ?? 0,
     citySource: src.citySrc ?? '', citySourceId: src.citySrcId ?? '', companySource: src.compSrc ?? '', companySourceId: src.compSrcId ?? '',
     cityDestination: src.cityDst ?? '', cityDestinationId: src.cityDstId ?? '', companyDestination: src.compDst ?? '', companyDestinationId: src.compDstId ?? '',
-    specialJob: Boolean(src.specialJob), jobMarket: src.jobMarket ?? '', jobIncome: src.jobIncome ?? 0, jobDeliveryTimeRemainingMin: src.timeAbsDelivery ?? 0, plannedDistanceKm: src.plannedDistanceKm ?? 0,
+    specialJob: Boolean(src.specialJob), jobMarket: src.jobMarket ?? '', jobIncome: src.jobIncome ?? 0, jobDeliveryTimeRemainingMin, plannedDistanceKm: src.plannedDistanceKm ?? 0,
 
     routeDistanceKm: Math.round(rawRouteDistanceMeters / 1000), routeDistanceMeters: rawRouteDistanceMeters, routeTimeSeconds: src.routeTime ?? 0, nextRestStopMin: src.restStop ?? 0,
 

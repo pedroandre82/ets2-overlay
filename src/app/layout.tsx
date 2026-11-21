@@ -26,9 +26,9 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} h-screen w-screen overflow-hidden antialiased`}
     >
-      <body className="min-h-full flex flex-col">
+      <body className="h-screen w-screen overflow-hidden flex flex-col select-none">
         <TelemetryProvider>
           {children}
         </TelemetryProvider>

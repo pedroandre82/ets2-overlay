@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { GadgetProps } from '@/types/gadget';
+import { NormalizedTelemetryData } from '@/adapters/telemetryAdapter';
 
 interface SystemStatusData {
   serverConnected: boolean;
@@ -11,19 +12,19 @@ interface SystemStatusData {
 
 export const SystemStatus: React.FC<GadgetProps> = ({ isDemoMode = false, data }) => {
   const demoData: SystemStatusData = {
-    serverConnected: false,
-    gameConnected: true,
+    serverConnected: true,
+    gameConnected: false,
     gamePaused: false,
   };
 
-  const telemetryData = data as SystemStatusData | undefined;
+  const telemetryData = data as NormalizedTelemetryData | undefined;
 
-  const status: SystemStatusData = isDemoMode || !telemetryData
+  const status: SystemStatusData = isDemoMode
     ? demoData
     : {
-        serverConnected: telemetryData.serverConnected ?? false,
-        gameConnected: telemetryData.gameConnected ?? false,
-        gamePaused: telemetryData.gamePaused ?? false,
+        serverConnected: telemetryData?.serverConnected ?? false,
+        gameConnected: telemetryData?.gameConnected ?? false,
+        gamePaused: telemetryData?.gamePaused ?? false,
       };
 
   return (

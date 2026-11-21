@@ -8,6 +8,10 @@ import { NavigationInfo } from './core/NavigationInfo';
 import { JobSummary } from './core/JobSummary';
 import { NextRestStop } from './core/NextRestStop';
 import { TrailerInfo } from './core/TrailerInfo';
+import { FuelInfo } from './core/FuelInfo';
+import { BrakeInfo } from './core/BrakeInfo';
+import { AdBlueInfo } from './core/AdBlueInfo';
+import { SpeedAndGear } from './core/SpeedAndGear';
 
 export const GADGET_REGISTRY: Record<string, GadgetComponent> = {
   'core:system-status': SystemStatus,
@@ -18,6 +22,10 @@ export const GADGET_REGISTRY: Record<string, GadgetComponent> = {
   'core:job-summary': JobSummary,
   'core:next-rest-stop': NextRestStop,
   'core:trailer-info': TrailerInfo,
+  'core:fuel-info': FuelInfo,
+  'core:brake-info': BrakeInfo,
+  'core:adblue-info': AdBlueInfo,
+  'core:speed-and-gear': SpeedAndGear,
 };
 
 interface PlaceholderProps {

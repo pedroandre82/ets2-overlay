@@ -19,6 +19,24 @@
   }
 }
 
+/* Trava o viewport e esconde rolagens globais */
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden !important;
+  width: 100vw;
+  height: 100vh;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+/* Esconde o trilho da barra no Chrome, Edge, Safari e Opera */
+::webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
