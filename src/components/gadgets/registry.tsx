@@ -16,6 +16,7 @@ import { Tachometer } from './core/Tachometer';
 import { TruckDiagnostics } from './core/TruckDiagnostics';
 import { GameClock } from './core/GameClock';
 import { RefuelInfo } from './core/RefuelInfo';
+import { TrafficFineAlert } from './core/TrafficFineInfo';
 
 export const GADGET_REGISTRY: Record<string, GadgetComponent> = {
   'core:system-status': SystemStatus,
@@ -34,6 +35,7 @@ export const GADGET_REGISTRY: Record<string, GadgetComponent> = {
   'core:truck-diagnostics': TruckDiagnostics,
   'core:game-clock': GameClock,
   'core:refuel-info': RefuelInfo,
+  'core:traffic-fine-alert': TrafficFineAlert,
 };
 
 interface PlaceholderProps {

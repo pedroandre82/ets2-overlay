@@ -20,10 +20,10 @@ interface RefuelTelemetryData {
 }
 
 export const RefuelInfo: React.FC<GadgetProps> = ({ isDemoMode = false, data }) => {
-  // Histórico dos últimos 3 abastecimentos (volume em Litros e consumo médio no momento)
+  // Histórico dos últimos 2 abastecimentos (volume em Litros e consumo médio no momento)
   const [history, setHistory] = useState<RefuelRecord[]>([
-    { id: 1, liters: 450, avgConsumption: 31.2, timeStr: '14:20' },
-    { id: 2, liters: 380, avgConsumption: 33.5, timeStr: '09:15' },
+    // { id: 1, liters: 450, avgConsumption: 31.2, timeStr: '14:20' },
+    // { id: 2, liters: 380, avgConsumption: 33.5, timeStr: '09:15' },
     // { id: 3, liters: 510, avgConsumption: 29.8, timeStr: '18:40' },
   ]);
 
