@@ -15,6 +15,7 @@ import { SpeedAndGear } from './core/SpeedAndGear';
 import { Tachometer } from './core/Tachometer';
 import { TruckDiagnostics } from './core/TruckDiagnostics';
 import { GameClock } from './core/GameClock';
+import { RefuelInfo } from './core/RefuelInfo';
 
 export const GADGET_REGISTRY: Record<string, GadgetComponent> = {
   'core:system-status': SystemStatus,
@@ -32,6 +33,7 @@ export const GADGET_REGISTRY: Record<string, GadgetComponent> = {
   'core:tachometer': Tachometer,
   'core:truck-diagnostics': TruckDiagnostics,
   'core:game-clock': GameClock,
+  'core:refuel-info': RefuelInfo,
 };
 
 interface PlaceholderProps {

@@ -16,7 +16,7 @@ export const slotMapping: Record<string, string | null> = {
   'right-2': null,
   'right-3': null,
   'right-4': null,
-  'right-5': null,
+  'right-5': 'core:refuel-info',
   'right-bottom': null,
   'bottom-corner-left': null,
   'bottom-1': null,
