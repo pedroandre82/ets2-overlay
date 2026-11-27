@@ -47,7 +47,7 @@ export const RefuelInfo: React.FC<GadgetProps> = ({ isDemoMode = false, data }) 
   const accumulatedLitersRef = useRef<number>(0);
   const lastFullOdometerRef = useRef<number | null>(null);
 
-  // Referências para detectar trocas de veículo e alterações externas ("mágicas")
+  // Referências para incorporar o estado anterior da telemetria
   const prevPlateRef = useRef<string>('');
   const prevFuelLitersRef = useRef<number | null>(null);
   const prevFuelCapacityRef = useRef<number | null>(null);
@@ -134,23 +134,41 @@ export const RefuelInfo: React.FC<GadgetProps> = ({ isDemoMode = false, data }) 
     }
     prevPlateRef.current = currentPlate;
 
-    // B) DETECÇÃO DE ABASTECIMENTO "MÁGICO" (Oficina / Guincho / Quick Job)
+    // B) INICIALIZAÇÃO DE REFS E DETECÇÃO DE ALTERAÇÃO EXTERNA ("MÁGICA")
     const prevFuel = prevFuelLitersRef.current;
     const prevCap = prevFuelCapacityRef.current;
 
+    // Se é a primeira leitura do componente/telemetria, apenas inicializa as refs sem disparar lógica
+    if (prevFuel === null || prevCap === null) {
+      prevFuelLitersRef.current = currentFuel;
+      prevFuelCapacityRef.current = currentCapacity;
+      return;
+    }
+
     if (!isRefuelingSessionRef.current && !isRefuelingFlag) {
-      // Ignora a inicialização (prevCap > 10 evita falso positivo quando a app conecta)
-      const isRealCapacityChange = prevCap !== null && prevCap > 10 && currentCapacity !== prevCap;
-      const isMagicRefuel = prevFuel !== null && currentFuel > prevFuel + 20;
+      const isRealCapacityChange = prevCap > 10 && currentCapacity !== prevCap;
+      const isMagicRefuel = currentFuel > prevFuel + 20;
 
       if (isMagicRefuel || isRealCapacityChange) {
-        console.log(
-          `[RefuelInfo] 🛠️ Alteração externa de combustível/oficina detectada ` +
-            `(Fuel: ${prevFuel}L -> ${currentFuel}L, Cap: ${prevCap}L -> ${currentCapacity}L). ` +
-            `Nova linha de base definida: ${currentOdo} km.`
-        );
-        lastFullOdometerRef.current = currentOdo;
-        accumulatedLitersRef.current = 0;
+        const isTankFullNow = currentFuel >= currentCapacity - 2.0;
+
+        if (isTankFullNow) {
+          console.log(
+            `[RefuelInfo] 🛠️ Alteração externa detectada e TANQUE CHEIO ` +
+              `(Fuel: ${prevFuel}L -> ${currentFuel}L, Cap: ${prevCap}L -> ${currentCapacity}L). ` +
+              `Nova linha de base definida: ${currentOdo} km.`
+          );
+          lastFullOdometerRef.current = currentOdo;
+          accumulatedLitersRef.current = 0;
+        } else {
+          console.log(
+            `[RefuelInfo] 🛠️ Alteração externa detectada em TANQUE INCOMPLETO ` +
+              `(Fuel: ${prevFuel}L -> ${currentFuel}L). ` +
+              `Linha de base redefinida para null (aguardando próximo abastecimento CHEIO).`
+          );
+          lastFullOdometerRef.current = null;
+          accumulatedLitersRef.current = 0;
+        }
       }
     }
     prevFuelLitersRef.current = currentFuel;
@@ -177,7 +195,7 @@ export const RefuelInfo: React.FC<GadgetProps> = ({ isDemoMode = false, data }) 
           const totalLegLiters = accumulatedLitersRef.current + litersAdded;
           let calculatedAvg: number | null = null;
 
-          // Se já existir uma linha de base anterior válida, calcula a média do trecho
+          // Só calcula a média se já existir um marco zero CHEIO registrado anteriormente
           if (lastFullOdometerRef.current !== null && currentOdo > lastFullOdometerRef.current) {
             const deltaKm = currentOdo - lastFullOdometerRef.current;
             if (deltaKm > 0 && totalLegLiters > 0) {
@@ -193,7 +211,7 @@ export const RefuelInfo: React.FC<GadgetProps> = ({ isDemoMode = false, data }) 
               `${
                 calculatedAvg !== null
                   ? `Média calculada: ${calculatedAvg} ${unitLabel}`
-                  : 'Primeira parada cheia registrada (linha de base definida, sem média prévia).'
+                  : 'Primeira parada cheia registrada. Linha de base definida (exibindo "--").'
               }`
           );
 
@@ -207,7 +225,7 @@ export const RefuelInfo: React.FC<GadgetProps> = ({ isDemoMode = false, data }) 
           // Insere apenas abastecimentos FULL no histórico visível
           setHistory((prev) => [newRecord, ...prev.slice(0, MAX_HISTORY_ENTRIES - 1)]);
 
-          // Atualiza a linha de base para o próximo ciclo e zera o acumulador
+          // Atualiza o odômetro de base para o próximo ciclo e zera o acumulador
           lastFullOdometerRef.current = currentOdo;
           accumulatedLitersRef.current = 0;
         } else {
@@ -298,9 +316,6 @@ export const RefuelInfo: React.FC<GadgetProps> = ({ isDemoMode = false, data }) 
               const diff = hasVal && hasPrevVal ? item.avgConsumption! - nextValidItem!.avgConsumption! : 0;
               const diffStr = diff > 0 ? `+${diff.toFixed(1)}` : diff < 0 ? `${diff.toFixed(1)}` : '0.0';
 
-              // Regras de Cores para a Coluna VAR:
-              // Para KM/L: maior é melhor (positivo = verde, negativo = vermelho)
-              // Para L/100KM: menor é melhor (negativo = verde, positivo = vermelho)
               const isGood = isKmL ? diff > 0 : diff < 0;
               const isBad = isKmL ? diff < 0 : diff > 0;
 
