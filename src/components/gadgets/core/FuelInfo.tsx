@@ -16,6 +16,10 @@ export const FuelInfo: React.FC<GadgetProps> = ({ isDemoMode = false, data }) =>
   // Ref para memorizar o último consumo válido e evitar oscilações para "--"
   const lastValidAvgRef = useRef<number>(0);
 
+  // Refs para rastrear a tendência de variação do consumo médio
+  const prevAvgRef = useRef<number | null>(null);
+  const trendRef = useRef<'up' | 'down' | null>(null);
+
   // Dados de teste no Modo DEMO
   const demoData: FuelData = {
     fuelLiters: 480,
@@ -44,6 +48,7 @@ export const FuelInfo: React.FC<GadgetProps> = ({ isDemoMode = false, data }) =>
 
   // --- CONFIGURAÇÃO DA UNIDADE DE CONSUMO VIA .ENV.LOCAL ---
   const fuelUnit = (process.env.NEXT_PUBLIC_FUEL_UNIT || 'L/100km').toUpperCase();
+  const isKmL = fuelUnit === 'KM/L' || fuelUnit === 'KML';
 
   // Atualiza o último valor válido recebido para evitar flicker
   const rawAvg = currentData.fuelAvgConsumption;
@@ -55,13 +60,55 @@ export const FuelInfo: React.FC<GadgetProps> = ({ isDemoMode = false, data }) =>
   // Trata conversão independente se o valor vier em L/km (0.425) ou L/100km (42.5)
   const lPer100 = effectiveAvg > 5 ? effectiveAvg : effectiveAvg * 100;
 
+  // --- MONITORAMENTO DA TENDÊNCIA DO CONSUMO MÉDIO ---
+  if (lPer100 > 0) {
+    if (prevAvgRef.current !== null) {
+      const diff = lPer100 - prevAvgRef.current;
+      // Registra alteração de tendência quando houver variação superior a 0.001
+      if (Math.abs(diff) > 0.001) {
+        if (diff > 0) {
+          // O consumo em L/100km aumentou (gasto maior)
+          trendRef.current = isKmL ? 'down' : 'up';
+        } else {
+          // O consumo em L/100km diminuiu (gasto menor)
+          trendRef.current = isKmL ? 'up' : 'down';
+        }
+        prevAvgRef.current = lPer100;
+      }
+    } else {
+      prevAvgRef.current = lPer100;
+    }
+  }
+
   let formattedAvgConsumption = '--';
   if (lPer100 > 0) {
-    if (fuelUnit === 'KM/L' || fuelUnit === 'KML') {
+    if (isKmL) {
       const kmPerL = (100 / lPer100).toFixed(2);
       formattedAvgConsumption = `${kmPerL} km/L`;
     } else {
       formattedAvgConsumption = `${lPer100.toFixed(1)} L/100km`;
+    }
+  }
+
+  // Símbolo e cor da seta de tendência
+  let trendIcon = null;
+  if (trendRef.current !== null && lPer100 > 0) {
+    if (trendRef.current === 'up') {
+      // 'up': Para KM/L = aumento de eficiência (Verde). Para L/100km = aumento de gasto (Vermelho).
+      const isGood = isKmL;
+      trendIcon = (
+        <span className={`text-[10px] font-black mr-1 ${isGood ? 'text-emerald-400' : 'text-red-400'}`}>
+          ▲
+        </span>
+      );
+    } else if (trendRef.current === 'down') {
+      // 'down': Para KM/L = queda de eficiência (Vermelho). Para L/100km = redução de gasto (Verde).
+      const isGood = !isKmL;
+      trendIcon = (
+        <span className={`text-[10px] font-black mr-1 ${isGood ? 'text-emerald-400' : 'text-red-400'}`}>
+          ▼
+        </span>
+      );
     }
   }
 
@@ -125,7 +172,7 @@ export const FuelInfo: React.FC<GadgetProps> = ({ isDemoMode = false, data }) =>
           </div>
         </div>
 
-        {/* Autonomia Destaque */}
+        {/* Autonomia Destaque (Ícone de Estrada/Rodovia) */}
         <div className="bg-slate-950/60 border border-slate-800/80 rounded px-2 py-1 flex items-center justify-between">
           <div className="flex flex-col">
             <span className="text-[8px] text-slate-400 uppercase font-semibold">ESTIMATED RANGE</span>
@@ -133,19 +180,22 @@ export const FuelInfo: React.FC<GadgetProps> = ({ isDemoMode = false, data }) =>
               {currentData.fuelRangeKm.toLocaleString()} <span className="text-xs font-bold text-slate-400">km</span>
             </span>
           </div>
-          <div className="p-1 rounded bg-cyan-500/10 border border-cyan-500/20 text-cyan-400">
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M18 6L6 18" />
-              <path d="M8 6h10v10" />
+          <div className="p-1 rounded bg-cyan-500/10 border border-cyan-500/20 text-cyan-400" title="Autonomia na estrada">
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M4 19L9 3h6l5 16" />
+              <path d="M12 6v2" />
+              <path d="M12 11v2" />
+              <path d="M12 16v2" />
             </svg>
           </div>
         </div>
       </div>
 
-      {/* Rodapé: Consumo Médio (Fixado com h-5, shrink-0 e whitespace-nowrap) */}
+      {/* Rodapé: Consumo Médio com Seta de Tendência */}
       <div className="flex items-center justify-between text-[9px] border-t border-slate-800/80 pt-1 h-5 shrink-0 whitespace-nowrap overflow-hidden">
         <span className="text-slate-400 uppercase font-semibold shrink-0">AVG:</span>
-        <span className="text-emerald-400 font-bold text-[10px] truncate ml-1">
+        <span className="text-emerald-400 font-bold text-[10px] truncate ml-1 flex items-center">
+          {trendIcon}
           {formattedAvgConsumption}
         </span>
       </div>
